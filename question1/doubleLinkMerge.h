@@ -192,21 +192,35 @@ static list_ele_t *get_middle(struct list_head *list)
     }
     return list_entry(slow, list_ele_t, list);
 }
+static inline void list_cut_middle(struct list_head *head_to,
+                                   struct list_head *head_from)
+{
+    struct list_head *fast = head_from->next, *slow;
+    struct list_head *head_from_first = head_from->next;
+    
+    if (list_empty(head_from))
+        return;
+    // find middle
+    list_for_each (slow, head_from) {
+        if (fast->next == head_from || fast->next->next == head_from)
+            break;
+        fast = fast->next->next;
+    }
+    // begin to cut from headfirst to node, and list it to head_to 
+    head_from->next = slow->next;
+    head_from->next->prev = head_from;
+
+    head_to->prev = slow;
+    slow->next = head_to;
+    head_to->next = head_from_first;
+    head_to->next->prev = head_to;
+}
 
 static void list_merge(struct list_head *lhs,
                        struct list_head *rhs,
                        struct list_head *head)
 {
     INIT_LIST_HEAD(head);
-    if (list_empty(lhs)) {
-        list_splice_tail(lhs, head);
-        return;
-    }
-    if (list_empty(rhs)) {
-        list_splice_tail(rhs, head);
-        return;
-    }
-
     while (!list_empty(lhs) && !list_empty(rhs)) {
         char *lv = list_entry(lhs->next, list_ele_t, list)->value;
         char *rv = list_entry(rhs->next, list_ele_t, list)->value;
@@ -225,10 +239,73 @@ void list_merge_sort(queue_t *q)
     queue_t left;
     struct list_head sorted;
     INIT_LIST_HEAD(&left.list);
-    list_cut_position(&left.list, &q->list, &get_middle(&q->list)->list);
+    list_cut_middle(&left.list, &q->list);
     list_merge_sort(&left);
     list_merge_sort(q);
     list_merge(&left.list, &q->list, &sorted);
     INIT_LIST_HEAD(&q->list);
     list_splice_tail(&sorted, &q->list);
+}
+
+static bool validate(queue_t *q)
+{
+    struct list_head *node;
+    list_for_each (node, &q->list) {
+        if (node->next == &q->list)
+            break;
+        if (strcmp(list_entry(node, list_ele_t, list)->value,
+                   list_entry(node->next, list_ele_t, list)->value) > 0)
+            return false;
+    }
+    return true;
+}
+
+static queue_t *q_new()
+{
+    queue_t *q = malloc(sizeof(queue_t));
+    if (!q) return NULL;
+
+    q->head = q->tail = NULL;
+    q->size = 0;
+    INIT_LIST_HEAD(&q->list);
+    return q;
+}
+
+static void q_free(queue_t *q)
+{
+    if (!q) return;
+
+    list_ele_t *current = q->head;
+    while (current) {
+        list_ele_t *tmp = current;
+        current = current->next;
+        free(tmp->value);
+        free(tmp);
+    }
+    free(q);
+}
+
+bool q_insert_head(queue_t *q, char *s)
+{
+    if (!q) return false;
+
+    list_ele_t *newh = malloc(sizeof(list_ele_t));
+    if (!newh)
+        return false;
+
+    char *new_value = strdup(s);
+    if (!new_value) {
+        free(newh);
+        return false;
+    }
+
+    newh->value = new_value;
+    newh->next = q->head;
+    q->head = newh;
+    if (q->size == 0)
+        q->tail = newh;
+    q->size++;
+    list_add_tail(&newh->list, &q->list);
+
+    return true;
 }
