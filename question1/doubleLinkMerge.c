@@ -26,6 +26,6 @@ int main(void)
     q_free(q);
     end = clock();
     end -= start;
-    printf("%ld ms", end);
+    printf("%ld ms\n", end);
     return 0;
 }
