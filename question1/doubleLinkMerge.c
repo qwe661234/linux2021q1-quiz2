@@ -2,6 +2,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 #include "doubleLinkMerge.h"
 
 static bool validate(queue_t *q)
@@ -69,6 +70,8 @@ bool q_insert_head(queue_t *q, char *s)
 
 int main(void)
 {
+    clock_t start, end;
+    start = clock();
     FILE *fp = fopen("cities.txt", "r");
     if (!fp) {
         perror("failed to open cities.txt");
@@ -80,16 +83,12 @@ int main(void)
     while (fgets(buf, 256, fp))
         q_insert_head(q, buf);
     fclose(fp);
-    // list_ele_t *ptr = q->head;
-    // while(ptr != q->tail){
-    //     printf("%s, ", ptr->value);
-    //     ptr = ptr->next;
-    // }
-    // printf("\n");
     list_merge_sort(q);
-    // assert(validate(q));
+    assert(validate(q));
 
     q_free(q);
-
+    end = clock();
+    end -= start;
+    printf("%ld ms\n", end);
     return 0;
 }
