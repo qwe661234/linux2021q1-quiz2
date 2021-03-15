@@ -1,9 +1,12 @@
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
 #include "bitcopy.h"
 
 int main(int _argc, char **_argv)
 {
+    clock_t start, end;
+    start = clock();
     memset(&input[0], 0xFF, sizeof(input));
 
     for (int i = 1; i <= 32; ++i) {
@@ -17,6 +20,8 @@ int main(int _argc, char **_argv)
             }
         }
     }
-
+    end = clock();
+    end -= start;
+    printf("%ld ms\n", end);
     return 0;
 }
