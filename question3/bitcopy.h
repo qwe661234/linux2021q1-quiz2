@@ -26,18 +26,6 @@ void bitcpy(void *_dest,      /* Address of the buffer to write to */
         0xFF  /*    == 8    11111111b   */
     };
 
-    static const uint8_t write_mask[] = {
-        0xFF, /*    == 0    11111111b   */
-        0x7F, /*    == 1    01111111b   */
-        0x3F, /*    == 2    00111111b   */
-        0x1F, /*    == 3    00011111b   */
-        0x0F, /*    == 4    00001111b   */
-        0x07, /*    == 5    00000111b   */
-        0x03, /*    == 6    00000011b   */
-        0x01, /*    == 7    00000001b   */
-        0x00  /*    == 8    00000000b   */
-    };
-
     while (count > 0) {
         uint8_t data = *source++;
         // how many bytes you want to write this round
@@ -59,14 +47,14 @@ void bitcpy(void *_dest,      /* Address of the buffer to write to */
             // write first bytes
             *dest++ = (original & mask) | (data >> write_lhs);
             // keep the context of next bytes
-            original = *dest & write_mask[bitsize - write_rhs];
+            original = *dest & ~read_mask[bitsize - write_rhs];
             // write next bytes
             *dest = original | (data << write_rhs);
         } else {
             // Since write_lhs + bitsize is never >= 8, no out-of-bound access.
             
             // keep context you do not write from tail
-            mask |= write_mask[write_lhs + bitsize];
+            mask |= ~read_mask[write_lhs + bitsize];
             // write bytes
             *dest++ = (original & mask) | (data >> write_lhs);
         }
