@@ -6,9 +6,9 @@
 
 int main(int _argc, char **_argv)
 {
-    FILE *fp = fopen("b.txt", "w");
+    FILE *fp = fopen("a.txt", "w");
     if (!fp) {
-        perror("failed to open b.txt");
+        perror("failed to open a.txt");
         exit(EXIT_FAILURE);
     }
     memset(&input[0], 0xFF, sizeof(input));
@@ -25,7 +25,7 @@ int main(int _argc, char **_argv)
                 printf("\n");
                 end = clock();
                 end -= start;
-                fprintf(fp, "%ld ms\n", end);
+                fprintf(fp, "%d\n", i);
             }
         }
     }
